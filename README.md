@@ -1,6 +1,6 @@
 # GitHub Pull Requests Summary Script
 
-This script fetches a summary of open, closed, and draft pull requests from the past week for a specified GitHub repository.
+This script fetches a summary of open, closed, and draft pull requests from the past week for a specified GitHub repository. It then emails this summary using Amazon SES.
 
 ### Prerequisites
 
@@ -17,7 +17,7 @@ AWS credentials can be generated through the AWS Management Console. Detailed in
 1. Clone the repository:
 
    ```shell
-   git clone https://github.com/danpaldev/repositoryname.git
+   git clone https://github.com/danpaldev/pr-assignment.git
    ```
 
 2. Create a virtual environment and activate it:
@@ -63,3 +63,8 @@ python pr_script.py
 ```
 
 The program fetches a list of pull requests from the specified GitHub repository, assembles a summary, and sends the summary in an email using AWS SES.
+
+## Example
+
+As an example, I tracked the Pull Requests of the bitcoin project repository. The email would look like this:
+![Mail Example](examplePic.png)
