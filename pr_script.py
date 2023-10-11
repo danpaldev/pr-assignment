@@ -4,10 +4,8 @@ from constants import GITHUB_API_URL, REPO_NAME, REPO_OWNER
 from mail_stuff import send_email
 
 try:
-    # Calculate the date for one week ago
     one_week_ago = (datetime.now() - timedelta(weeks=1)).isoformat()
 
-    # Prepare headers
     headers = {
         'Accept': 'application/vnd.github+json',
     }
@@ -22,6 +20,8 @@ try:
             pr for pr in pull_requests if pr['created_at'] >= one_week_ago]
 
         print(send_email(pull_requests_last_week))
+    else:
+        raise Exception(f"Error calling GitHub API: {response.json()}")
 
 except Exception as e:
     print(f"An error occurred: {e}")

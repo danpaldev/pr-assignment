@@ -3,7 +3,6 @@ import os
 
 load_dotenv()
 
-# Constants
 GITHUB_API_URL = 'https://api.github.com'
 REPO_OWNER = os.getenv('REPO_OWNER')
 REPO_NAME = os.getenv('REPO_NAME')
