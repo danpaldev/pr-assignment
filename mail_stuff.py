@@ -1,5 +1,7 @@
 from constants import *
 import boto3
+from botocore.exceptions import BotoCoreError
+
 
 # Initialize a boto3 & SES
 session = boto3.Session(
@@ -22,34 +24,63 @@ def get_email_body(pr_data):
         [pr for pr in pr_data if pr['state'] == 'closed'])
     draft = len([pr for pr in pr_data if pr['draft'] == True])
 
-    email_body = f'''
-    Pull requests in the last week for repository {REPO_NAME} by {REPO_OWNER}:
-    Opened: {opened}
-    Closed: {closed}
-    Draft: {draft}
-    '''
+    # Generating a summary for every Pull Request
+    pr_summaries = ""
+    for pr in pr_data:
+        labels = ", ".join([label['name'] for label in pr['labels']])
+        # A Closed PR could be merged or not, we check if it was merged or not
+        if pr['state'] == 'closed':
+            pr_state = 'Merged' if pr['merge_commit_sha'] else 'Closed without merging'
+        # If it’s not closed, it will have either a “draft” or “open” status
+        else:
+            pr_state = 'Draft' if pr['draft'] else 'Open'
+
+        pr_summaries += f"""
+        <li>
+        <b>PR#{pr['number']} ({pr_state}):</b> <em> {pr['title']} </em> <br>
+        {f"<b>Labels</b>: {labels} <br>" if labels else ""}
+        Opened at {pr['created_at']} by {pr['user']['login']} <br>
+        <a href='{pr['html_url']}'>Link to PR</a>
+        </li><br>"""
+
+    email_body = f"""<html>
+    <head></head>
+    <body>
+    <b> Summary of the last 7 days: </b>
+        <p>Opened: {opened}</p>
+        <p>Closed: {closed}</p>
+        <p>Drafts: {draft}</p>
+        <ul>
+        {pr_summaries}
+        </ul>
+    </body>
+    </html>"""
 
     return email_body
 
 
 def send_email(data):
-    response = client.send_email(
-        Source=FROM_EMAIL,
-        Destination={
-            'ToAddresses': [
-                TO_EMAIL,
-            ],
-        },
-        Message={
-            'Subject': {
-                'Data': get_email_subject()
+    try:
+        response = client.send_email(
+            Source=FROM_EMAIL,
+            Destination={
+                'ToAddresses': [
+                    TO_EMAIL,
+                ],
             },
-            'Body': {
-                'Text': {
-                    'Data': get_email_body(data)
+            Message={
+                'Subject': {
+                    'Data': get_email_subject()
+                },
+                'Body': {
+                    'Html': {
+                        'Data': get_email_body(data)
+                    }
                 }
             }
-        }
-    )
+        )
+        return response
 
-    return response
+    except BotoCoreError as e:
+        print(f"Error sending email: {e}")
+        raise
